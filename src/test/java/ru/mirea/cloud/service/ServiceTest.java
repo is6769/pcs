@@ -86,6 +86,40 @@ class ServiceTest {
         assertThrows(BusinessException.class, () -> requests.update(request.getId(), 1, "Название", "", ResourceType.DATABASE, Region.RU_SPB, 4, 8, 200));
     }
 
+    @Test void staleEditorCannotOverwriteAConcurrentChange() {
+        ResourceRequest opened = create();
+        requests.update(opened.getId(), 1, "Сохранено другим пользователем", "", ResourceType.DATABASE,
+                Region.RU_KAZAN, 4, 8, 200, opened.getVersion());
+        BusinessException error = assertThrows(BusinessException.class, () -> requests.update(opened.getId(), 1,
+                "Устаревшая форма", "", ResourceType.VIRTUAL_MACHINE, Region.RU_MOSCOW, 2, 4, 100, opened.getVersion()));
+        assertTrue(error.getMessage().contains("Обновите список"));
+        assertEquals("Сохранено другим пользователем", requests.get(opened.getId()).getTitle());
+        assertEquals(1, requests.get(opened.getId()).getVersion());
+    }
+
+    @Test void staleSelectionCannotChangeStatusEvenWhenTransitionRemainsLegal() {
+        ResourceRequest selected = create();
+        requests.update(selected.getId(), 1, "Новая конфигурация", "", ResourceType.DATABASE,
+                Region.RU_KAZAN, 8, 16, 500);
+        assertThrows(BusinessException.class, () -> requests.changeStatus(selected.getId(), RequestStatus.APPROVED,
+                selected.getVersion()));
+        ResourceRequest refreshed = requests.get(selected.getId());
+        assertEquals(RequestStatus.NEW, refreshed.getStatus());
+        requests.changeStatus(refreshed.getId(), RequestStatus.APPROVED, refreshed.getVersion());
+        assertEquals(RequestStatus.APPROVED, requests.get(selected.getId()).getStatus());
+    }
+
+    @Test void staleSelectionCannotDeleteAnUpdatedRequest() {
+        ResourceRequest selected = create();
+        requests.update(selected.getId(), 1, "Новая конфигурация", "", ResourceType.DATABASE,
+                Region.RU_KAZAN, 8, 16, 500);
+        assertThrows(BusinessException.class, () -> requests.delete(selected.getId(), selected.getVersion()));
+        ResourceRequest refreshed = requests.get(selected.getId());
+        assertEquals("Новая конфигурация", refreshed.getTitle());
+        requests.delete(refreshed.getId(), refreshed.getVersion());
+        assertTrue(requests.findAll().isEmpty());
+    }
+
     @Test void deletionRulesAndMissingRecords() {
         ResourceRequest first = create();
         assertThrows(BusinessException.class, () -> clients.delete(1));
@@ -145,8 +179,18 @@ class ServiceTest {
         }
         public List<ResourceRequest> findAll() { return new ArrayList<>(data.values()); }
         public Optional<ResourceRequest> findById(long id) { return Optional.ofNullable(data.get(id)); }
-        public void update(ResourceRequest r) { data.put(r.getId(), r); }
-        public void delete(long id, int version) { data.remove(id); }
+        public void update(ResourceRequest r) {
+            ResourceRequest current = data.get(r.getId());
+            if (current == null || current.getVersion() != r.getVersion()) throw new BusinessException("Устаревшая версия.");
+            data.put(r.getId(), new ResourceRequest(r.getId(), r.getClientId(), r.getTitle(), r.getDescription(),
+                    r.getResourceType(), r.getRegion(), r.getCpu(), r.getRamGb(), r.getStorageGb(), r.getStatus(),
+                    r.getCreatedAt(), r.getVersion() + 1));
+        }
+        public void delete(long id, int version) {
+            ResourceRequest current = data.get(id);
+            if (current == null || current.getVersion() != version) throw new BusinessException("Устаревшая версия.");
+            data.remove(id);
+        }
         public boolean existsByClient(long id) { return data.values().stream().anyMatch(r -> r.getClientId() == id); }
     }
 }

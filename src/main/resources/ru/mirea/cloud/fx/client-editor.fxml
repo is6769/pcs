@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.cloud.fx.ClientEditorController"
+            fx:id="formRoot" styleClass="editor-root">
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="10" fillWidth="true">
+                    <padding><Insets top="24" right="28" bottom="12" left="28"/></padding>
+                    <Label text="S-CLOUD / КЛИЕНТЫ" styleClass="eyebrow"/>
+                    <Label fx:id="heading" text="Новый клиент" styleClass="page-title"/>
+                    <Label text="Все поля обязательны. Email должен быть уникальным." wrapText="true" styleClass="subtitle"/>
+                    <Label text="Имя · до 120 символов" styleClass="field-label"/>
+                    <TextField fx:id="nameField" accessibleText="Имя клиента" promptText="Например, Анна Иванова"/>
+                    <Label text="Email · до 254 символов" styleClass="field-label"/>
+                    <TextField fx:id="emailField" accessibleText="Email клиента" promptText="anna@company.ru"/>
+                    <Label text="Компания · до 150 символов" styleClass="field-label"/>
+                    <TextField fx:id="companyField" accessibleText="Компания клиента" promptText="Название организации"/>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <VBox spacing="12" styleClass="editor-footer">
+            <padding><Insets top="16" right="28" bottom="20" left="28"/></padding>
+            <Label fx:id="errorLabel" wrapText="true" maxWidth="Infinity" styleClass="error-label"/>
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button text="Отмена" onAction="#cancel" cancelButton="true" styleClass="secondary-button"/>
+                <Button text="Сохранить клиента" onAction="#save" defaultButton="true" styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

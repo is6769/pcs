@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.mirea.cloud.fx.MainController" styleClass="application" stylesheets="@app.css">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="24" styleClass="app-header">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="S-CLOUD" styleClass="brand"/>
+                <Label text="Управление облачными ресурсами" styleClass="app-subtitle"/>
+            </VBox>
+            <Label text="Клиенты · заявки · ресурсы" styleClass="header-caption"/>
+            <Button fx:id="refreshButton" text="Обновить" onAction="#refresh" styleClass="header-button"/>
+        </HBox>
+    </top>
+    <center>
+        <TabPane fx:id="tabs" tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
+            <tabs>
+                <Tab fx:id="requestsTab" text="Заявки">
+                    <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="page-scroll">
+                    <VBox spacing="10" styleClass="page">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                                <Label text="Заявки на ресурсы" styleClass="page-title"/>
+                                <Label fx:id="requestCount" text="Данные ещё не загружены" styleClass="muted"/>
+                            </VBox>
+                            <Button fx:id="exportButton" text="Экспорт в Excel" onAction="#exportRequests"/>
+                            <Button fx:id="requestAdd" text="+ Новая заявка" onAction="#addRequest" styleClass="primary-button"/>
+                        </HBox>
+                        <VBox spacing="8" styleClass="filter-panel">
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <TextField fx:id="requestSearch" promptText="Поиск по названию, описанию, имени, компании или email клиента" HBox.hgrow="ALWAYS"/>
+                                <Button text="Сбросить" onAction="#clearFilters" styleClass="quiet-button"/>
+                            </HBox>
+                            <FlowPane hgap="12" vgap="10">
+                                <VBox spacing="5"><Label text="Статус" styleClass="field-label"/><ComboBox fx:id="statusFilter" prefWidth="190"/></VBox>
+                                <VBox spacing="5"><Label text="Тип ресурса" styleClass="field-label"/><ComboBox fx:id="typeFilter" prefWidth="230"/></VBox>
+                                <VBox spacing="5"><Label text="Регион" styleClass="field-label"/><ComboBox fx:id="regionFilter" prefWidth="190"/></VBox>
+                                <VBox spacing="5"><Label text="Клиент" styleClass="field-label"/><ComboBox fx:id="clientFilter" prefWidth="280"/></VBox>
+                            </FlowPane>
+                        </VBox>
+                        <TableView fx:id="requestTable" VBox.vgrow="ALWAYS" prefHeight="290" minHeight="110">
+                            <columns>
+                                <TableColumn fx:id="titleColumn" text="Заявка" prefWidth="190" minWidth="140"/>
+                                <TableColumn fx:id="requestClientColumn" text="Клиент / компания" prefWidth="190" minWidth="150"/>
+                                <TableColumn fx:id="typeColumn" text="Тип ресурса" prefWidth="170" minWidth="140"/>
+                                <TableColumn fx:id="regionColumn" text="Регион" prefWidth="130" minWidth="100"/>
+                                <TableColumn fx:id="statusColumn" text="Статус" prefWidth="150" minWidth="130"/>
+                                <TableColumn fx:id="cpuColumn" text="CPU" prefWidth="60" minWidth="50" styleClass="number-column"/>
+                                <TableColumn fx:id="ramColumn" text="RAM, ГБ" prefWidth="80" minWidth="70" styleClass="number-column"/>
+                                <TableColumn fx:id="storageColumn" text="Диск, ГБ" prefWidth="85" minWidth="75" styleClass="number-column"/>
+                                <TableColumn fx:id="createdColumn" text="Создана" prefWidth="150" minWidth="140"/>
+                            </columns>
+                        </TableView>
+                        <HBox spacing="9" alignment="CENTER_LEFT">
+                            <Button fx:id="requestEdit" text="Редактировать" onAction="#editRequest"/>
+                            <Button fx:id="requestStatus" text="Изменить статус" onAction="#changeStatus"/>
+                            <Button fx:id="requestDelete" text="Удалить" onAction="#deleteRequest" styleClass="danger-button"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="Сортировка: нажмите заголовок столбца" styleClass="muted"/>
+                        </HBox>
+                        <VBox spacing="7" styleClass="detail-panel">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <Label fx:id="detailTitle" styleClass="section-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button fx:id="viewClient" text="Открыть клиента" onAction="#showClient" styleClass="quiet-button"/>
+                            </HBox>
+                            <Label fx:id="detailClient" wrapText="true" styleClass="muted"/>
+                            <ScrollPane fitToWidth="true" prefViewportHeight="36" maxHeight="65" minHeight="30" styleClass="detail-scroll">
+                                <Label fx:id="detailDescription" wrapText="true" styleClass="detail-description"/>
+                            </ScrollPane>
+                        </VBox>
+                    </VBox>
+                    </ScrollPane>
+                </Tab>
+                <Tab fx:id="clientsTab" text="Клиенты">
+                    <VBox spacing="16" styleClass="page">
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                                <Label text="Клиенты" styleClass="page-title"/>
+                                <Label fx:id="clientCount" text="Данные ещё не загружены" styleClass="muted"/>
+                            </VBox>
+                            <Button fx:id="clientAdd" text="+ Новый клиент" onAction="#addClient" styleClass="primary-button"/>
+                        </HBox>
+                        <TextField fx:id="clientSearch" promptText="Поиск по имени, компании или email"/>
+                        <TableView fx:id="clientTable" VBox.vgrow="ALWAYS" prefHeight="430">
+                            <columns>
+                                <TableColumn fx:id="clientNameColumn" text="Имя клиента" prefWidth="280" minWidth="150"/>
+                                <TableColumn fx:id="clientCompanyColumn" text="Компания" prefWidth="300" minWidth="150"/>
+                                <TableColumn fx:id="clientEmailColumn" text="Email" prefWidth="330" minWidth="180"/>
+                                <TableColumn fx:id="clientRequestsColumn" text="Заявки" prefWidth="100" minWidth="85" styleClass="number-column"/>
+                            </columns>
+                        </TableView>
+                        <HBox spacing="10">
+                            <Button fx:id="clientEdit" text="Редактировать" onAction="#editClient"/>
+                            <Button fx:id="viewRequests" text="Заявки клиента" onAction="#showClientRequests"/>
+                            <Button fx:id="clientDelete" text="Удалить" onAction="#deleteClient" styleClass="danger-button"/>
+                        </HBox>
+                        <Label fx:id="clientHint" wrapText="true" styleClass="hint-panel" maxWidth="Infinity"/>
+                    </VBox>
+                </Tab>
+                <Tab text="Статистика">
+                    <ScrollPane fitToWidth="true" styleClass="statistics-scroll">
+                        <VBox spacing="18" styleClass="page">
+                            <VBox spacing="6">
+                                <Label text="Обзор облака" styleClass="page-title"/>
+                                <Label fx:id="statisticsHint" text="Показатели появятся после загрузки данных." wrapText="true" styleClass="muted"/>
+                            </VBox>
+                            <FlowPane fx:id="statisticsCards" hgap="16" vgap="16"/>
+                            <Label text="Выделенные CPU, RAM и диск учитывают только заявки со статусом «Ресурс выделен»." wrapText="true" styleClass="hint-panel" maxWidth="Infinity"/>
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="status-bar">
+            <ProgressIndicator fx:id="progress" prefWidth="16" prefHeight="16" maxWidth="16" maxHeight="16"/>
+            <Label fx:id="operationStatus" text="Подключение к базе данных…" styleClass="muted"/>
+        </HBox>
+    </bottom>
+</BorderPane>

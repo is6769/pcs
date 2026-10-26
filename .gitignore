@@ -1,14 +1,30 @@
+# Build output and locally downloaded tools
 target/
 .tools/
-.idea/
-*.iml
-.env
-exports/*.xlsx
-!exports/cloud-resources-demo.xlsx
-mvnw
-mwnv.cmd
-run.ps1
-.env.example
-exports/
-docs/
 .mvn/
+/mvnw
+/mvnw.cmd
+
+# IDE and operating system files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local configuration (keep the documented example)
+.env
+.env.*
+!.env.example
+/database.properties
+/src/main/resources/database.properties
+
+# Generated exports and diagnostic logs
+exports/
+*.log
+hs_err_pid*
+replay_pid*
+
+# Local study materials; excluded from the source repository
+/docs/
+/er-diagram.svg

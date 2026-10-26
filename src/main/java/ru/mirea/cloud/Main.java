@@ -13,6 +13,11 @@ public final class Main {
     private Main() { }
 
     public static void main(String[] args) {
+        if (args.length == 0) {
+            DesktopLauncher.main(args);
+            return;
+        }
+        if (args.length == 1 && args[0].equals("--console")) args = new String[0];
         DatabaseManager database = DatabaseManager.fromEnvironment();
         ClientRepository clientRepository = new JdbcClientRepository(database);
         ResourceRequestRepository requestRepository = new JdbcResourceRequestRepository(database);
@@ -22,7 +27,7 @@ public final class Main {
         ExportService exports = new ExportService(clients, requests, new ExcelExporter());
         if (args.length > 0) {
             if (args.length != 2 || !args[0].equals("--export")) {
-                System.err.println("Использование: java -jar s-cloud-1.0.0.jar [--export файл.xlsx]");
+                System.err.println("Использование: java -jar s-cloud-1.0.0.jar [--console | --export файл.xlsx]");
                 System.exit(2);
             }
             try {

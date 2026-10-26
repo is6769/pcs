@@ -32,25 +32,56 @@ public final class ResourceRequestService {
 
     public void update(long id, long clientId, String title, String description, ResourceType type,
                        Region region, int cpu, int ram, int storage) {
-        ResourceRequest current = get(id);
+        update(get(id), clientId, title, description, type, region, cpu, ram, storage);
+    }
+
+    /** Saves the exact snapshot opened by a desktop editor, rejecting stale forms. */
+    public void update(long id, long clientId, String title, String description, ResourceType type,
+                       Region region, int cpu, int ram, int storage, int expectedVersion) {
+        update(currentVersion(id, expectedVersion), clientId, title, description, type, region, cpu, ram, storage);
+    }
+
+    private void update(ResourceRequest current, long clientId, String title, String description, ResourceType type,
+                        Region region, int cpu, int ram, int storage) {
         if (current.getStatus() != RequestStatus.NEW)
             throw new BusinessException("Параметры можно менять только у новой заявки (NEW).");
-        requests.update(validated(id, clientId, title, description, type, region, cpu, ram, storage,
+        requests.update(validated(current.getId(), clientId, title, description, type, region, cpu, ram, storage,
                 current.getStatus(), current.getCreatedAt(), current.getVersion()));
     }
 
     public void changeStatus(long id, RequestStatus next) {
-        ResourceRequest current = get(id);
+        changeStatus(get(id), next);
+    }
+
+    public void changeStatus(long id, RequestStatus next, int expectedVersion) {
+        changeStatus(currentVersion(id, expectedVersion), next);
+    }
+
+    private void changeStatus(ResourceRequest current, RequestStatus next) {
         if (next == null || !current.getStatus().canTransitionTo(next))
             throw new BusinessException("Запрещён переход " + current.getStatus() + " → " + next + ".");
         requests.update(current.withStatus(next));
     }
 
     public void delete(long id) {
-        ResourceRequest current = get(id);
+        delete(get(id));
+    }
+
+    public void delete(long id, int expectedVersion) {
+        delete(currentVersion(id, expectedVersion));
+    }
+
+    private void delete(ResourceRequest current) {
         if (current.getStatus() == RequestStatus.APPROVED || current.getStatus() == RequestStatus.PROVISIONED)
             throw new BusinessException("Нельзя удалить одобренную заявку или заявку с выделенным ресурсом.");
-        requests.delete(id, current.getVersion());
+        requests.delete(current.getId(), current.getVersion());
+    }
+
+    private ResourceRequest currentVersion(long id, int expectedVersion) {
+        ResourceRequest current = get(id);
+        if (current.getVersion() != expectedVersion)
+            throw new BusinessException("Заявка изменена другим пользователем. Обновите список и откройте заявку заново.");
+        return current;
     }
 
     public List<ResourceRequest> searchTitle(String query) {

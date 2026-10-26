@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.cloud.fx.RequestEditorController"
+            fx:id="formRoot" styleClass="editor-root">
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="10" fillWidth="true">
+                    <padding><Insets top="24" right="28" bottom="12" left="28"/></padding>
+                    <Label text="S-CLOUD / ОБЛАЧНЫЕ РЕСУРСЫ" styleClass="eyebrow"/>
+                    <Label fx:id="heading" text="Новая заявка" styleClass="page-title"/>
+                    <Label text="Новая заявка создаётся со статусом «Новая». Дата устанавливается автоматически." wrapText="true" styleClass="subtitle"/>
+                    <Label text="Клиент *" styleClass="field-label"/>
+                    <ComboBox fx:id="clientBox" accessibleText="Клиент" promptText="Выберите клиента" maxWidth="Infinity"/>
+                    <Label text="Название * · до 150 символов" styleClass="field-label"/>
+                    <TextField fx:id="titleField" accessibleText="Название заявки" promptText="Например, сервер для интернет-магазина"/>
+                    <GridPane hgap="16" vgap="8">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="Тип ресурса *" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <Label text="Регион *" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <ComboBox fx:id="typeBox" accessibleText="Тип ресурса" maxWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <ComboBox fx:id="regionBox" accessibleText="Регион" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    </GridPane>
+                    <GridPane hgap="16" vgap="8">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+                            <ColumnConstraints percentWidth="33.34" hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="CPU, ядер *" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <Label text="RAM, ГБ *" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <Label text="Диск, ГБ *" styleClass="field-label" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                        <TextField fx:id="cpuField" accessibleText="CPU, ядер" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="ramField" accessibleText="RAM, ГБ" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <TextField fx:id="storageField" accessibleText="Диск, ГБ" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    </GridPane>
+                    <Label text="CPU: 1–64 · RAM: не менее 2 ГБ на ядро, до 512 ГБ · Диск: 10–10 000 ГБ. У объектного хранилища CPU и RAM равны 0." wrapText="true" styleClass="field-hint"/>
+                    <Label text="Описание · необязательно, до 2000 символов" styleClass="field-label"/>
+                    <TextArea fx:id="descriptionField" accessibleText="Описание заявки" promptText="Назначение ресурса и дополнительные сведения" wrapText="true" prefRowCount="3"/>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <VBox spacing="12" styleClass="editor-footer">
+            <padding><Insets top="16" right="28" bottom="20" left="28"/></padding>
+            <Label fx:id="errorLabel" wrapText="true" maxWidth="Infinity" styleClass="error-label"/>
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button text="Отмена" onAction="#cancel" cancelButton="true" styleClass="secondary-button"/>
+                <Button fx:id="saveButton" text="Сохранить заявку" onAction="#save" defaultButton="true" styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

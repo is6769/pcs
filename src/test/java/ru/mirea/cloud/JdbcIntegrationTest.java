@@ -31,9 +31,9 @@ class JdbcIntegrationTest {
         admin = DatabaseManager.fromEnvironment();
         schema = "test_" + UUID.randomUUID().toString().replace("-", "");
         try (Connection c = admin.open(); PreparedStatement s = c.prepareStatement("CREATE SCHEMA " + schema)) { s.execute(); }
-        String url = System.getenv().getOrDefault("DB_URL", "jdbc:postgresql://localhost:5433/cloud_provider");
+        String url = configured("url");
         database = new DatabaseManager(url + (url.contains("?") ? "&" : "?") + "currentSchema=" + schema,
-                System.getenv().getOrDefault("DB_USER", "cloud"), System.getenv().getOrDefault("DB_PASSWORD", "cloud_dev_password"));
+                configured("user"), configured("password"));
         try (Connection c = database.open()) {
             for (String script : List.of("sql/01-schema.sql", "sql/02-seed.sql")) {
                 for (String sql : Files.readString(Path.of(script)).split(";")) {
@@ -87,7 +87,19 @@ class JdbcIntegrationTest {
             requests.update(request.getId(), client.getId(), "Изменена", "", ResourceType.DATABASE, Region.RU_SPB, 2, 8, 50);
             assertThrows(BusinessException.class, () -> requestRepository.update(request.withStatus(RequestStatus.APPROVED)));
             assertThrows(BusinessException.class, () -> requestRepository.delete(request.getId(), request.getVersion()));
-            requests.changeStatus(request.getId(), RequestStatus.APPROVED);
+            // A second UI still holds version 0. The service must not silently reload version 1 and save over it.
+            ResourceRequestService staleUi = new ResourceRequestService(new JdbcResourceRequestRepository(database), clients);
+            assertThrows(BusinessException.class, () -> staleUi.update(request.getId(), client.getId(),
+                    "Устаревшая форма", "", ResourceType.VIRTUAL_MACHINE, Region.RU_MOSCOW, 1, 2, 10,
+                    request.getVersion()));
+            assertThrows(BusinessException.class,
+                    () -> staleUi.changeStatus(request.getId(), RequestStatus.APPROVED, request.getVersion()));
+            assertThrows(BusinessException.class, () -> staleUi.delete(request.getId(), request.getVersion()));
+            ResourceRequest refreshed = requests.get(request.getId());
+            assertEquals("Изменена", refreshed.getTitle());
+            assertEquals(1, refreshed.getVersion());
+            assertEquals(RequestStatus.NEW, refreshed.getStatus());
+            requests.changeStatus(request.getId(), RequestStatus.APPROVED, refreshed.getVersion());
             assertThrows(BusinessException.class, () -> requests.delete(request.getId()));
             requests.changeStatus(request.getId(), RequestStatus.CANCELLED);
             assertEquals(RequestStatus.CANCELLED, new JdbcResourceRequestRepository(database).findById(request.getId()).orElseThrow().getStatus());
@@ -127,5 +139,12 @@ class JdbcIntegrationTest {
             try (PreparedStatement s = c.prepareStatement(sql)) { s.executeUpdate(); }
         });
         assertEquals(state, exception.getSQLState());
+    }
+
+    /** fromEnvironment() above has already validated the same required settings. */
+    private static String configured(String key) {
+        String value = System.getProperty("db." + key);
+        if (value == null) value = System.getenv("DB_" + key.toUpperCase(Locale.ROOT));
+        return key.equals("password") ? value : value.strip();
     }
 }

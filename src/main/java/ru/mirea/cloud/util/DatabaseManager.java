@@ -16,12 +16,26 @@ public final class DatabaseManager {
     }
 
     public static DatabaseManager fromEnvironment() {
-        return new DatabaseManager(env("DB_URL", "jdbc:postgresql://localhost:5433/cloud_provider"),
-                env("DB_USER", "cloud"), env("DB_PASSWORD", "cloud_dev_password"));
+        Properties settings = connectionSettings(System.getProperties(), System.getenv());
+        return new DatabaseManager(settings.getProperty("db.url"), settings.getProperty("db.user"),
+                settings.getProperty("db.password"));
     }
 
-    private static String env(String key, String fallback) {
-        return System.getenv().getOrDefault(key, fallback);
+    /** All settings are required; Java system properties override environment variables. */
+    static Properties connectionSettings(Properties system, Map<String, String> environment) {
+        Properties settings = new Properties();
+        for (String key : List.of("url", "user", "password")) {
+            String property = "db." + key;
+            String value = system.getProperty(property);
+            if (value == null) value = environment.get("DB_" + key.toUpperCase(Locale.ROOT));
+            if (value == null || value.isBlank())
+                throw new IllegalStateException("Не задан параметр " + property + ". Укажите системное свойство "
+                        + property + " или переменную окружения DB_" + key.toUpperCase(Locale.ROOT) + ".");
+            settings.setProperty(property, key.equals("password") ? value : value.strip());
+        }
+        if (!settings.getProperty("db.url").startsWith("jdbc:postgresql:"))
+            throw new IllegalStateException("db.url должен быть JDBC-адресом PostgreSQL (jdbc:postgresql://сервер:порт/база).");
+        return settings;
     }
 
     public Connection open() throws SQLException {
